@@ -1,3 +1,7 @@
+patchmatch/bin
+l.c
+*.mat
+
 # Prerequisites
 *.d
 
