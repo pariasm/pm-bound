@@ -1,0 +1,230 @@
+===========
+DESCRIPTION
+===========
+
+
+This software implements the Generalized PATCHMATCH algorithm for the 
+computation of a NEAREST NEIGHBOR FIELD (NNF). It is based on the following
+publications:
+
+C. Barnes, E. Shechtman, A. Finkelstein, and D. B Goldman.  PatchMatch: A
+Randomized Correspondence Algorithm for Structural Image Editing. ACM
+Transactions on Graphics (Proc. SIGGRAPH) 28(3), August 2009.
+
+C. Barnes, E. Shechtman, D. B. Goldman, and A. Finkelstein. The
+Generalized PatchMatch Correspondence Algorithm. European Conference on
+Computer Vision, September 2010.
+
+
+
+The software has two components:
+	1) the patchmatch kernel
+	2) some example modules and test functions (in this ``test`` folder)
+
+
+The executables are mex files to be run inside matlab. 
+
+To compile it run
+$ make
+from a linux terminal. 
+
+To test it, run from matlab
+>> test_inpainting
+>> test_seinfeld
+
+
+It includes the following files:
+
+nnfield_list_extpatches_mex.c    ~ two executables showing two different ways
+nnfield_list_mex.c                 of using the NNF library
+Makefile                         ~ the mex files can be compiled using make
+NNfield_l2_extpatches.h          ~ files with the user defined patch distance
+NNfield_l2.h                     ~ function (see USAGE section below).
+dImage.h                         ~ a double image structure with some functions
+test_inpainting.m                ~ test scripts
+test_seinfeld.m
+apply_nnf.m                      ~ applys the nnf to an image (see test scripts)
+gauss_kernel.m                   ~ gaussian kernel 
+
+../iImage.h                      ~ a simple image of integers, used for masks mostly
+../list.c                        ~ an ordered list.
+../list.h
+../NNfield.c                     ~ the patchmatch kernel.
+../NNfield.h
+
+
+
+The authors of this software are 
+
+Pablo Arias <pariasm@gmail.com>
+Gabriele Facciolo <gfacciol@gmail.com>
+
+
+
+===========================
+WHAT DOES THE ALGORITHM DO?
+===========================
+
+The algorithm finds a mapping phi:D_1 --> D_2, where D_1,D_2 are two sets
+in the discrete plane. phi minimizes the following function:
+
+E(phi) = \sum_{x \in D_1} e( x , phi(x) )
+
+e is a functions which assings a score to phi(x). 
+
+A typical example: D_1 and D_2 are subdomains of two images, u_1 and u_2
+and e measures the patch distance between
+
+P(u_1)(x)      ~ a patch of image u_1 centered at x
+P(u_2)(phi(x)) ~ a patch of image u_2 centered at phi(x)
+
+In this case phi(x) points to the location in D_2 of the nearest neighbor
+of the patch at x, according to the patch distance e.
+
+
+The algorithm does not return phi directly. Instead it returns the NNF
+defined by: 
+
+n(x) = phi(x) - x.
+
+Therefore n(x) is the offset that has to be added to x to reach the nearest
+neighbor's location.
+
+
+More preciselly, this version of the algorithm, returns a list containing the 
+L nearest neighbors.
+
+n(x)(i) : offset for i-th nearest neighbor at x
+
+
+
+
+
+=====
+USAGE
+=====
+
+The NNF software has two parts:
+1) the NNF kernel
+2) user defined 'modules'
+
+
+A user defined module can be just .h file where the user 
+specifies 
+	- the patch distance function
+	- the data needed for the computation of this function
+
+Two example modules are provided:
+
+	NNfield_l2_extpatches.h 
+	NNfield_l2.h
+
+
+See inside these files for more info.
+
+
+
+================
+INPUT ARGUMENTS:
+================
+
+This section and the following explain the input arguments of the NNfield_basic 
+function. This is the principal funcion of the NNF kernel.
+
+	mask1        integer image of size ncol1 x nrow1 > defines NNF domain
+	mask2        integer image of size ncol2 x nrow2 > defines NNF codomain
+
+	maxit        number of iterations
+
+	nnfinout     NNF > it is field of lists ordered by score
+	
+	input_data   pointer to a user define structure containing auxiliary data
+	             needed for computation of patch distance *
+
+	patch_dist   pointer to a user defined patch distance function *
+
+
+* input_data and patch_dist are defined in the 'module'
+
+
+
+==========================================
+IMPORTANT COMMENTS ON THE INPUT ARGUMENTS:
+==========================================
+
+
+mask1 and mask2
+---------------
+
+There is an important issue with the domains D_1 and D_2: the
+user is required to provide an ordering of the locations in those
+sets.
+
+The reason is because the output NNF is defined as an array of 
+candidate list, ordered according to the user provided ordering.
+
+
+This "masks" encode two things at the same time.
+	- the source and target domains for the NNF
+	- the ordering in which pixels in those domains are traversed	
+
+
+This is easier to explain with an EXAMPLE: 
+
+mask1:
+-1 -1 -1 -1 -1 -1 -1 -1
+-1  0  1  2 -1 -1 -1 -1
+-1 -1  3  4 -1 -1 -1 -1
+-1 -1  5  6  7  8 -1 -1
+-1 -1 -1  9 10 11 -1 -1
+-1 -1 -1 12 -1 -1 -1 -1
+-1 -1 -1 13 -1 -1 -1 -1
+-1 -1 -1 -1 -1 -1 -1 -1
+
+If mask1 at (i,j) is negative, (i,j) does NOT belong to D_1.
+If mask1 at (i,j) is positive, then (i,j) belong to D_1, and
+mask1(i,j) indicates the index of (i,j) in the ordering of D_1.
+
+Therefore, we consider D_1 as the following ordered set of image
+locations
+
+	D_1[ 0] = ( 1, 1)
+	D_1[ 1] = ( 1, 2)
+	D_1[ 2] = ( 1, 3)
+	D_1[ 3] = ( 2, 2)
+	D_1[ 4] = ( 2, 3)
+	D_1[ 5] = ( 3, 2)
+	D_1[ 6] = ( 3, 3)
+	D_1[ 7] = ( 3, 4)
+	D_1[ 8] = ( 3, 5)
+	D_1[ 9] = ( 4, 3)
+	D_1[10] = ( 4, 4)
+	D_1[11] = ( 4, 5)
+	D_1[12] = ( 5, 3)
+	D_1[13] = ( 6, 3)
+
+
+The output is then an array of lists 
+
+	- nnf[0] list of candidates for D_1[0]
+	- nnf[1] list of candidates for D_1[1]
+   - etc
+
+
+input_data & patch_dist 
+----------------------- 
+
+These arguments are used to specify the patch error function e. 
+
+patch_dist is a pointer to the patch error function, which has to be
+implemented by the user with the following interface:
+
+DOUBLE my_patch_distance (int idx1, int idx2, void *data) 
+
+This computes the distance between locations D_1[idx1] and D_2[idx2].
+
+input_data can be any user define structure containting the data
+necessary for the computation of the patch distance. 
+
+
+
