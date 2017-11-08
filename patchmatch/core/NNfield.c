@@ -288,7 +288,8 @@ int forward_pass(iImage msk1, iImage msk2,
 	/* alloc list for search candidates */
 	list candidate_list = NewList();
 	idxelement i2rnd;
-	int samples_per_radii = LIST_MAX/nradii + 1;
+//	int samples_per_radii = LIST_MAX/nradii + 1;
+	int samples_per_radii = 1;
 
 	/* loop through maks 1 */
 	for (int i = 0; i < lidx1; i++) 
