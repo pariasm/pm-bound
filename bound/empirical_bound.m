@@ -1,5 +1,5 @@
-function [P, sc0] = empirical_bound(u1, u2, prms, ...
-                                  points, values, trials, sc0, P, prev_trials)
+function [P, V, sc0] = empirical_bound(u1, u2, prms, ...
+                                  points, values, trials, sc0, P, V, prev_trials)
 
 if ~exist('trials') || isempty(trials), trials = 100; end
 if ~exist('P'), P = []; end
@@ -35,10 +35,11 @@ end
 
 % do many trials and compute statistics
 py = round(50/4); px = round(110/4);
-scs = single(zeros(npoints, iters, prms.list));
+scs = single(zeros(npoints, iters+1, prms.list));
 
 if ~prev_trials || ~exist('P') || isempty(P),
-	P = single(zeros(npoints, iters, nvalues, prms.list));
+	P = single(zeros(npoints, iters+1, nvalues, prms.list));
+	V = single(zeros(npoints, iters+1, nvalues, prms.list));
 	prev_trials = 0;
 end
 
@@ -48,26 +49,38 @@ for i = prev_trials + [1:trials],
 	prms.mxit = 0;
 	[nnfy,nnfx,sc] = nnfield(u1,msk1,u2,msk2,window,prms);
 
+	for l = 1:prms.list,
+		tmp = single(sc(:,:,l));
+		scs(:,1,l) = tmp(points);
+	end
+
 	% fw-bw propagation passes
-	prms.mxit = 1;
+	prms.mxit = -1;
 	for j = 1:iters
 	 	% negative iters means to start with backward prop
-		prms.mxit = -1*prms.mxit;
+%		prms.mxit = -1*prms.mxit;
 		[nnfy,nnfx,sc] = nnfield(u1,msk1,u2,msk2,window,prms,nnfy,nnfx);
 		sc = sqrt(sc) - sqrt(sc0(:,:,1:prms.list));
 
 		for l = 1:prms.list,
 			tmp = single(sc(:,:,l));
-			scs(:,j,l) = tmp(points);
+			scs(:,j+1,l) = tmp(points);
 		end
 	end
 
-	% update probabilities
+	% update probabilities and variances
 	for v = 1:length(values), 
-		P(:,:,v,:) = 1/i*(squeeze(scs > values(v)) + (i-1)*P(:,:,v,:));
+		Pold = P(:,:,v,:);
+		Pi = squeeze(scs > values(v));
+		P(:,:,v,:) = 1/i*((i-1)*P(:,:,v,:) + Pi);
+		V(:,:,v,:) = 1/i*((i-1)*V(:,:,v,:) + (Pi - Pold).*(Pi - P(:,:,v,:)));
 	end
 	
-	plot(squeeze(P(1,:,:,1))), title(sprintf('%d trials', i)), drawnow
+	plot([0:iters],squeeze(P(end,:,:,1)),'.-'), hold on
+	plot([0:iters],squeeze(P(end,:,:,1) + 3*sqrt(V(end,:,:,1)/i)),':'),
+	plot([0:iters],squeeze(P(end,:,:,1) - 3*sqrt(V(end,:,:,1)/i)),':'), hold off
+	ylim([-.1, 1.1]), xlim([0,iters]), grid on
+	title(sprintf('%d trials', i)), drawnow
 	
 end
 

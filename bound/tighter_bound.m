@@ -1,4 +1,4 @@
-function [C,ll,Uim] = compute_patchmatch_bound(a0, b, p, epsilons, prms, mepsilons)
+function [C,Pi,ll,Uim] = compute_patchmatch_bound(a0, b, p, epsilons, prms, mepsilons)
 
 if nargin == 5,
 	mepsilons = inf*ones(size(epsilons));
@@ -25,7 +25,7 @@ A = im2col(a, [psz,psz], 'sliding'); % patches of A
 B = im2col(b, [psz,psz], 'sliding'); % patches of B
 
 % L2 distances between all patches in A and B
-U = sqrt(bsxfun(@plus, sum(B.^2,1), bsxfun(@plus, sum(A.^2,1)', -2*A'*B))/psz/psz);
+U = real(sqrt(bsxfun(@plus, sum(B.^2,1), bsxfun(@plus, sum(A.^2,1)', -2*A'*B))/psz/psz));
 Umin = min(U,[],2);
 U = bsxfun(@minus, U, Umin);
 
@@ -34,9 +34,9 @@ Uim = permute(reshape(U,[sza,szb]-psz+1),[3,4,1,2]);
 
 % U = permute(reshape(Uim,[prod(sza-psz+1),prod(szb-psz+1)],[1,2,3,4]); % inverse
 
-
 ll = nan*ones(size(Uim,3), size(Uim,4), length(epsilons));
 C = ones(size(ll));
+Pi = zeros(length(epsilons),1);
 for ieps = 1:length(epsilons), eps = epsilons(ieps);
 
 	disp(eps)
@@ -48,10 +48,10 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 	y = size(Uim,4);
 	for x = size(Uim,3)-1:-1:1,
 		if shift,
-			MM(:,:,x,y) = [Uim(2:end,:,x+1,y) > ll(x+1,y,ieps);  ones(1,size(Uim,2))];
-%			MM(:,:,x,y) = [Uim(2:end,:,x+1,y) > ll(x+1,y,ieps); zeros(1,size(Uim,2))];
+			MM(:,:,x,y) = [Uim(2:end,:,x+1,y) >= ll(x+1,y,ieps);  ones(1,size(Uim,2))];
+%			MM(:,:,x,y) = [Uim(2:end,:,x+1,y) >= ll(x+1,y,ieps); zeros(1,size(Uim,2))];
 		else
-			MM(:,:,x,y) = Uim(:,:,x+1,y) > ll(x+1,y,ieps);
+			MM(:,:,x,y) = Uim(:,:,x+1,y) >= ll(x+1,y,ieps);
 		end
 		Uxy = Uim(:,:,x,y);
 		idx = find(MM(:,:,x,y));
@@ -63,10 +63,10 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 	x = size(Uim,3);
 	for y = size(Uim,4)-1:-1:1,
 		if shift,
-			MM(:,:,x,y) = [(Uim(:,2:end,x,y+1) > ll(x,y+1,ieps)),  ones(size(Uim,1),1)];
-%			MM(:,:,x,y) = [(Uim(:,2:end,x,y+1) > ll(x,y+1,ieps)), zeros(size(Uim,1),1)];
+			MM(:,:,x,y) = [(Uim(:,2:end,x,y+1) >= ll(x,y+1,ieps)),  ones(size(Uim,1),1)];
+%			MM(:,:,x,y) = [(Uim(:,2:end,x,y+1) >= ll(x,y+1,ieps)), zeros(size(Uim,1),1)];
 		else
-			MM(:,:,x,y) = Uim(:,:,x,y+1) > ll(x,y+1,ieps);
+			MM(:,:,x,y) = Uim(:,:,x,y+1) >= ll(x,y+1,ieps);
 		end
 		Uxy = Uim(:,:,x,y);
 		idx = find(MM(:,:,x,y));
@@ -78,10 +78,10 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 	for x = size(Uim,3)-1:-1:1,
 	for y = size(Uim,4)-1:-1:1,
 		if shift,
-			MM(:,:,x,y) = [(Uim(2:end,:,x+1,y) > ll(x+1,y,ieps)); ones(1,size(Uim,2))] ...
-			           .* [(Uim(:,2:end,x,y+1) > ll(x,y+1,ieps)), ones(size(Uim,1),1)];
+			MM(:,:,x,y) = [(Uim(2:end,:,x+1,y) >= ll(x+1,y,ieps)); ones(1,size(Uim,2))] ...
+			           .* [(Uim(:,2:end,x,y+1) >= ll(x,y+1,ieps)), ones(size(Uim,1),1)];
 		else
-			MM(:,:,x,y) = (Uim(:,:,x+1,y) > ll(x+1,y,ieps)) .* (Uim(:,:,x,y+1) > ll(x,y+1,ieps));
+			MM(:,:,x,y) = (Uim(:,:,x+1,y) >= ll(x+1,y,ieps)) .* (Uim(:,:,x,y+1) > ll(x,y+1,ieps));
 		end
 		Uxy = Uim(:,:,x,y);
 		idx = find(MM(:,:,x,y));
@@ -90,6 +90,9 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 		end
 	end
 	end
+
+	% compute initial probabilities
+	Pi(ieps) = sum(sum(MM(:,:,end,end)))/prod(szb - psz + 1);
 
 	disp('Computing C');
 

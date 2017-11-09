@@ -21,10 +21,11 @@ for n = 1:nvals, u = Uvals(n);
 end
 
 % patch match kernel is uniform
-radii = fliplr(unique(round(max(h,w)./2.^[0:20])));
-radii(find(radii < 1)) = [];
+%radii = fliplr(unique(round(max(h,w)./2.^[0:20])));
+%radii(find(radii < 1)) = [];
+radii = max(h,w);
 
- p = ones(h,w); % uncomment to draw probability map
+p = ones(h,w); % uncomment to draw probability map
 C = 0;
 for i = 1:h,
 for j = 1:w,
@@ -40,7 +41,7 @@ if U(i,j) >= minU && U(i,j) < b,
 		for r = radii,
 			iM = min(h + 1,i + r); im = max(1,i - r);
 			jM = min(w + 1,j + r); jm = max(1,j - r);
-	
+
 			% linear interpolation
 			if n < nvals,
 				tmp = (Ia(iM,jM,[n,n+1])+Ia(im,jm,[n,n+1])-Ia(im,jM,[n,n+1])-Ia(iM,jm,[n,n+1]))/(iM-im)/(jM-jm); 
@@ -55,7 +56,7 @@ if U(i,j) >= minU && U(i,j) < b,
 		for r = radii,
 			iM = min(h + 1,i + r); im = max(1,i - r);
 			jM = min(w + 1,j + r); jm = max(1,j - r);
-	
+
 			% linear interpolation
 			if n < nvals,
 				tmp = (Ir(iM,jM,[n,n+1])+Ir(im,jm,[n,n+1])-Ir(im,jM,[n,n+1])-Ir(iM,jm,[n,n+1]))/(iM-im)/(jM-jm); 

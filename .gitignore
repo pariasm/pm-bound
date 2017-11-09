@@ -1,6 +1,8 @@
 patchmatch/bin
 l.c
 *.mat
+.*.swp
+.*.swo
 
 # Prerequisites
 *.d
