@@ -1,8 +1,11 @@
 #include "iImage.h" 
 #include "NNfield.h" 
+#include <time.h> // init srand
 //#include <omp.h>
 
 /*#define DEBUG_STATS*/
+
+#define BOUND_VERSION
 
 #define max(a,b) (((a)>(b))?(a):(b))
 #define min(a,b) (((a)<(b))?(a):(b))
@@ -13,6 +16,8 @@ int NEIGH_FWD[2*2] = {-1, 0, 0, -1};
 int NEIGH_BWD[2*2] = { 1, 0, 0,  1};
 int SUCCESFUL_RANDOM_SEARCH; /* these are just for statistics */
 int FAILED_RANDOM_SEARCH;
+int SUCCESFUL_SAMPLE; /* these are just for statistics */
+int FAILED_SAMPLE;
 
 int VERBOSE = 0;
 
@@ -76,21 +81,27 @@ idxelement sample_inside_circle (idxelement center, int radius, iImage msk)
 		/* check if rnd is in image and in msk2 */
 		if (msk->val[rnd.pos] >= 0) {
 			stop = 1;
-			SUCCESFUL_RANDOM_SEARCH++;
-		} else FAILED_RANDOM_SEARCH++; 
+			SUCCESFUL_SAMPLE++;
+		} else {
+//			printf("rs: %3d,%3d - ", rnd.x, rnd.y);
+			FAILED_SAMPLE++; 
+		}
 
 		/* K K K A A A H H H ! ! ! ! */
 		if (ntrials > mxtrials) { 
 			rnd.pos = -1;
 			rnd.x   = -1;
 			rnd.y   = -1;
+			FAILED_RANDOM_SEARCH++; 
 			return rnd;
+			printf("n");
 			if (VERBOSE) printf("KKKAAAHHH ! ! ! > no candidate found \n");
 		}
 
 		ntrials++;
 	}
 
+	SUCCESFUL_RANDOM_SEARCH++;
 	return rnd;
 }
 
@@ -276,7 +287,11 @@ int forward_pass(iImage msk1, iImage msk2,
 	int changes = 0;
 
 	/* radii of concentric regions for random search */
+#ifndef BOUND_VERSION
 	int nradii = (int)( log( 1.0 / ((double)w) ) / log(alpha) ); 
+#else
+	int nradii = 1;
+#endif
 	int *radii = calloc(nradii,sizeof(int));
 	double radii_tmp = w;
 	radii[0] = (int)w;
@@ -288,8 +303,11 @@ int forward_pass(iImage msk1, iImage msk2,
 	/* alloc list for search candidates */
 	list candidate_list = NewList();
 	idxelement i2rnd;
-//	int samples_per_radii = LIST_MAX/nradii + 1;
+#ifndef BOUND_VERSION
+	int samples_per_radii = LIST_MAX/nradii + 1;
+#else
 	int samples_per_radii = 1;
+#endif
 
 	/* loop through maks 1 */
 	for (int i = 0; i < lidx1; i++) 
@@ -353,7 +371,11 @@ int backward_pass(iImage msk1, iImage msk2,
 	int changes = 0;
 
 	/* radii of concentric regions for random search */
+#ifndef BOUND_VERSION
 	int nradii = (int)( log( 1.0 / ((double)w) ) / log(alpha) ); 
+#else
+	int nradii = 1;
+#endif
 	int *radii = calloc(nradii,sizeof(int));
 	double radii_tmp = w;
 	radii[0] = (int)w;
@@ -365,7 +387,11 @@ int backward_pass(iImage msk1, iImage msk2,
 	/* alloc list for search candidates */
 	list candidate_list = NewList();
 	idxelement i2rnd;
+#ifndef BOUND_VERSION
 	int samples_per_radii = LIST_MAX/nradii + 1;
+#else
+	int samples_per_radii = 1;
+#endif
 
 	/* loop through maks 1 */
 	for (int i = lidx1 - 1; i >= 0; --i)
@@ -590,16 +616,21 @@ extern void NNfield_basic(int *mask1, int ncol1, int nrow1,
 	globaldistfunc= patch_dist;
 
 	/* random seed */
-	srand(time(NULL));
+	struct timespec t;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &t);
+	srand(t.tv_sec*1000000000 + t.tv_nsec);
 
 #ifdef DEBUG_STATS
 	{
 		srand(0);
 		printf("\nWARNING NNF NOT RANDOM \n");
-		FAILED_RANDOM_SEARCH=0;
-		SUCCESFUL_RANDOM_SEARCH=0;
 	}
 #endif
+
+	FAILED_RANDOM_SEARCH=0;
+	SUCCESFUL_RANDOM_SEARCH=0;
+	FAILED_SAMPLE=0;
+	SUCCESFUL_SAMPLE=0;
 
 	/* copy the images to a framed image */
 	iImage msk1 = copy_data_to_iimage_with_frame ( ncol1, nrow1, 1, 1, 1, OUT_OF_BOUND, mask1);
@@ -662,11 +693,11 @@ extern void NNfield_basic(int *mask1, int ncol1, int nrow1,
 
 		if ( (it + phase) % 2 ) {
 			changes = forward_pass (msk1, msk2, idx1, lidx1, idx2, lidx2, alpha, w, nnf);
-			if (VERBOSE) printf("% 3d : forward\n", it);
+//			if (VERBOSE) printf("% 3d : forward\n", it);
 		}
 		else {
 			changes = backward_pass(msk1, msk2, idx1, lidx1, idx2, lidx2, alpha, w, nnf);
-			if (VERBOSE) printf("% 3d : backward\n", it);
+//			if (VERBOSE) printf("% 3d : backward\n", it);
 		}
 
 #ifdef DEBUG_STATS
@@ -689,12 +720,21 @@ extern void NNfield_basic(int *mask1, int ncol1, int nrow1,
 	{
 		fclose(nnfstats);
 		fclose(nnfchanges);
+	}
+#endif
+
+	if (VERBOSE) {
 		double TOTAL = (double)(FAILED_RANDOM_SEARCH + SUCCESFUL_RANDOM_SEARCH);
 		printf("       -> rnd search trials: failed: %g%% succesful: %g%% \n",
-				(double)FAILED_RANDOM_SEARCH   /TOTAL*100,
+				(double)FAILED_RANDOM_SEARCH/TOTAL*100,
 				(double)SUCCESFUL_RANDOM_SEARCH/TOTAL*100);
-		}
-#endif
+
+		TOTAL = (double)(FAILED_SAMPLE + SUCCESFUL_SAMPLE);
+		printf("       -> rnd search samples: failed: %g%% succesful: %g%% \n",
+				(double)FAILED_SAMPLE/TOTAL*100,
+				(double)SUCCESFUL_SAMPLE/TOTAL*100);
+	}
+
 
 	free(idx1);
 	free(idx2);
@@ -833,10 +873,19 @@ extern void NNfield_decoupled(int *mask1, int ncol1, int nrow1,
 #ifdef DEBUG_STATS
 	fclose(nnfstats);
 	fclose(nnfchanges);
-	double TOTAL = (double)(FAILED_RANDOM_SEARCH + SUCCESFUL_RANDOM_SEARCH);
-	printf("       -> rnd search trials: failed: %g%% succesful: %g%% \n", (double)FAILED_RANDOM_SEARCH   /TOTAL*100, 
-			                                                                 (double)SUCCESFUL_RANDOM_SEARCH/TOTAL*100);
 #endif
+
+	if (VERBOSE) {
+		double TOTAL = (double)(FAILED_RANDOM_SEARCH + SUCCESFUL_RANDOM_SEARCH);
+		printf("       -> rnd search trials: failed: %g%% succesful: %g%% \n",
+				(double)FAILED_RANDOM_SEARCH/TOTAL*100,
+				(double)SUCCESFUL_RANDOM_SEARCH/TOTAL*100);
+
+		TOTAL = (double)(FAILED_SAMPLE + SUCCESFUL_SAMPLE);
+		printf("       -> rnd search samples: failed: %g%% succesful: %g%% \n",
+				(double)FAILED_SAMPLE/TOTAL*100,
+				(double)SUCCESFUL_SAMPLE/TOTAL*100);
+	}
 
 	free(idx1);
 	free(idx2);
