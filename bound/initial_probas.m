@@ -7,7 +7,7 @@ x = p(1)-hpsz;
 y = p(2)-hpsz; % coordinates of a point
 
 % crop a smaller image 
-A = a(x + [1:psz], y + [1:psz]); A = A(:);
+A = a(x + [0:psz-1], y + [0:psz-1]); A = A(:);
 B = im2col(b, [psz,psz], 'sliding'); % patches of B
 
 szb = size(b);
