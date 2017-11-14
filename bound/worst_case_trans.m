@@ -1,11 +1,18 @@
-function C = wct(U, a)
+function C = wct(U, a, prms)
 
-U = (U > a);
+if nargin == 2,
+	prms.nradii = 0;
+end
+
+U = (U >= a);
 [h,w] = size(U);
 
-% patch match kernel is uniform
-radii = fliplr(unique(round(max(h,w)./2.^[0:20])));
-radii(find(radii < 1)) = [];
+if prms.nradii == 1,
+	radii = max(h,w);
+else
+	radii = fliplr(unique(round(max(h,w)./2.^[0:20])));
+	radii(find(radii < 1)) = [];
+end
 
 
 I = integralImage(U);
@@ -30,4 +37,5 @@ end
 
 %C = max(p(:)/length(radii));
 C = max(p(:));
+
 

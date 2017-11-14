@@ -26,6 +26,9 @@ prms.psz   = [5,5];  % patch size
 prms.list  = 1;      % number of nearest neighbors
 prms.iters = 250;     % patchmatch iterations
 prms.rsz = 20;
+%prms.transition_kernel = 'acceptance';
+prms.transition_kernel = 'regular';
+prms.nradii = 1; % 1 means uniform search ~ 0 means patchmatch search
 
 % select a set of points in image 1, and some energy levels --------------------
 %xrange = [5,12,14,13]; % x are rows
@@ -39,7 +42,6 @@ npoints = length(points);
 %values = [1, 2, 5, 10, 15];
 values = [.5];
 nvalues = length(values);
-		prms.rsz = 20;
 
 % compute theoretical convergence bound at selected points ---------------------
 Pi = zeros(npoints, nvalues);
@@ -47,7 +49,7 @@ for i = 1:npoints,
 	Pi(i,:) = initial_probas(u1, u2, points(i,:), values, prms);
 end
 
-if 0,
+if 1,
 	C0f = zeros(npoints, nvalues);
 	C1f = zeros(npoints, nvalues);
 	for i = 1:npoints,

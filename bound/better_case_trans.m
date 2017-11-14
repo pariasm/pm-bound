@@ -1,4 +1,4 @@
-function [C,p] = wct(U, Ua, b)
+function [C,p] = wct(U, Ua, prms, b)
 
 if nargin == 2, b = inf; end
 
@@ -21,9 +21,12 @@ for n = 1:nvals, u = Uvals(n);
 end
 
 % patch match kernel is uniform
-%radii = fliplr(unique(round(max(h,w)./2.^[0:20])));
-%radii(find(radii < 1)) = [];
-radii = max(h,w);
+if prms.nradii == 1,
+	radii = max(h,w);
+else
+	radii = fliplr(unique(round(max(h,w)./2.^[0:20])));
+	radii(find(radii < 1)) = [];
+end
 
 p = ones(h,w); % uncomment to draw probability map
 C = 0;

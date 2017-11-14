@@ -31,7 +31,6 @@ U = bsxfun(@minus, U, Umin);
 
 % energy as a szb x sza 4D image: Uim(:,:,i,j) is the energy map for ij in a
 Uim = permute(reshape(U,[sza,szb]-psz+1),[3,4,1,2]);
-
 % U = permute(reshape(Uim,[prod(sza-psz+1),prod(szb-psz+1)],[1,2,3,4]); % inverse
 
 ll = nan*ones(size(Uim,3), size(Uim,4), length(epsilons));
@@ -39,7 +38,7 @@ C = ones(size(ll));
 Pi = zeros(length(epsilons),1);
 for ieps = 1:length(epsilons), eps = epsilons(ieps);
 
-	disp(eps)
+%	disp(eps)
 
 	MM = zeros(size(Uim));
 	ll(end,end,ieps) = eps;
@@ -104,7 +103,11 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 			py = szll(2) - d/2 + -dd;
 			if px < 1 || py < 1, continue, end
 
-			C(px,py,ieps) = better_case_trans(Uim(:,:,px,py), MM(:,:,px,py), mepsilons(ieps));
+			if strcmp(prms.transition_kernel, 'acceptance'),
+				C(px,py,ieps) = better_case_trans(Uim(:,:,px,py), MM(:,:,px,py), prms, mepsilons(ieps));
+			else
+				C(px,py,ieps) =  worst_case_trans(Uim(:,:,px,py), ll(px,py,ieps), prms);
+			end
 
 			imagesc(C(:,:,ieps)); drawnow
 			disp(sprintf('%3d,%3d - %6.4f - %g', px, py, C(px,py,ieps), prod(prod(C(:,:,ieps)))))

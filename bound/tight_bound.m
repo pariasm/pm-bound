@@ -21,7 +21,7 @@ A = im2col(a, [psz,psz], 'sliding'); % patches of A
 B = im2col(b, [psz,psz], 'sliding'); % patches of B
 
 % L2 distances between all patches in A and B
-U = sqrt(bsxfun(@plus, sum(B.^2,1), bsxfun(@plus, sum(A.^2,1)', -2*A'*B))/psz/psz);
+U = real(sqrt(bsxfun(@plus, sum(B.^2,1), bsxfun(@plus, sum(A.^2,1)', -2*A'*B))/psz/psz));
 Umin = min(U,[],2);
 U = bsxfun(@minus, U, Umin);
 
@@ -38,8 +38,8 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 	y = size(Uim,4);
 	for x = size(Uim,3)-1:-1:1,
 		if shift,
-%			idx = find([(Uim(2:end,:,x+1,y) > eps - ll(x+1,y,ieps)); ones (1,size(Uim,2))]);
-			idx = find([(Uim(2:end,:,x+1,y) > eps - ll(x+1,y,ieps)); zeros(1,size(Uim,2))]);
+			idx = find([(Uim(2:end,:,x+1,y) > eps - ll(x+1,y,ieps)); ones (1,size(Uim,2))]);
+%			idx = find([(Uim(2:end,:,x+1,y) > eps - ll(x+1,y,ieps)); zeros(1,size(Uim,2))]);
 		else
 			idx = find(Uim(:,:,x+1,y) > eps - ll(x+1,y,ieps));
 		end
@@ -50,8 +50,8 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 	x = size(Uim,3);
 	for y = size(Uim,4)-1:-1:1,
 		if shift,
-%			idx = find([(Uim(:,2:end,x,y+1) > eps - ll(x,y+1,ieps)); ones (size(Uim,1),1)]);
-			idx = find([(Uim(:,2:end,x,y+1) > eps - ll(x,y+1,ieps)), zeros(size(Uim,1),1)]);
+			idx = find([(Uim(:,2:end,x,y+1) > eps - ll(x,y+1,ieps)); ones (size(Uim,1),1)]);
+%			idx = find([(Uim(:,2:end,x,y+1) > eps - ll(x,y+1,ieps)), zeros(size(Uim,1),1)]);
 		else
 			idx = find(Uim(:,:,x,y+1) > eps - ll(x,y+1,ieps));
 		end
@@ -63,7 +63,7 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 	for y = size(Uim,4)-1:-1:1,
 
 		if shift,
-			idx = find([(Uim(2:end,:,x+1,y) > eps - ll(x+1,y,ieps)); zeros(1,size(Uim,2))]);
+			idx = find([(Uim(2:end,:,x+1,y) > eps - ll(x+1,y,ieps)); ones(1,size(Uim,2))]);
 		else
 			idx = find(Uim(:,:,x+1,y) > eps - ll(x+1,y,ieps));
 		end
@@ -73,7 +73,7 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 		end
 
 		if shift,
-			idx = find([(Uim(:,2:end,x,y+1) > eps - ll(x,y+1,ieps)), zeros(size(Uim,1),1)]);
+			idx = find([(Uim(:,2:end,x,y+1) > eps - ll(x,y+1,ieps)), ones(size(Uim,1),1)]);
 		else
 			idx = find(Uim(:,:,x,y+1) > eps - ll(x,y+1,ieps));
 		end

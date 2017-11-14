@@ -55,7 +55,7 @@ for i = prev_trials + [1:trials],
 	end
 
 	% fw-bw propagation passes
-	prms.mxit = -1;
+	prms.mxit = +1;
 	for j = 1:iters
 	 	% negative iters means to start with backward prop
 %		prms.mxit = -1*prms.mxit;
