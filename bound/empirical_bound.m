@@ -76,9 +76,9 @@ for i = prev_trials + [1:trials],
 		V(:,:,v,:) = 1/i*((i-1)*V(:,:,v,:) + (Pi - Pold).*(Pi - P(:,:,v,:)));
 	end
 
-	plot([0:iters],squeeze(P(end,:,:,2)),'.-'), hold on
-	plot([0:iters],squeeze(P(end,:,:,2) + 3*sqrt(V(end,:,:,2)/i)),':'),
-	plot([0:iters],squeeze(P(end,:,:,2) - 3*sqrt(V(end,:,:,2)/i)),':'), hold off
+	plot([0:iters],squeeze(P(end,:,:,1)),'.-'), hold on
+	plot([0:iters],squeeze(P(end,:,:,1) + 3*sqrt(V(end,:,:,1)/i)),':'),
+	plot([0:iters],squeeze(P(end,:,:,1) - 3*sqrt(V(end,:,:,1)/i)),':'), hold off
 	ylim([-.1, 1.1]), xlim([0,iters]), grid on
 	title(sprintf('%d trials', i)), drawnow
 	
