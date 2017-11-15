@@ -38,7 +38,7 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 	y = size(Uim,4);
 	for x = size(Uim,3)-1:-1:1,
 		if shift,
-			idx = find([(Uim(2:end,:,x+1,y) > eps - ll(x+1,y,ieps)); ones (1,size(Uim,2))]);
+			idx = find([(Uim(2:end,:,x+1,y) > eps - ll(x+1,y,ieps));  ones(1,size(Uim,2))]);
 %			idx = find([(Uim(2:end,:,x+1,y) > eps - ll(x+1,y,ieps)); zeros(1,size(Uim,2))]);
 		else
 			idx = find(Uim(:,:,x+1,y) > eps - ll(x+1,y,ieps));
@@ -50,7 +50,7 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 	x = size(Uim,3);
 	for y = size(Uim,4)-1:-1:1,
 		if shift,
-			idx = find([(Uim(:,2:end,x,y+1) > eps - ll(x,y+1,ieps)); ones (size(Uim,1),1)]);
+			idx = find([(Uim(:,2:end,x,y+1) > eps - ll(x,y+1,ieps));  ones(size(Uim,1),1)]);
 %			idx = find([(Uim(:,2:end,x,y+1) > eps - ll(x,y+1,ieps)), zeros(size(Uim,1),1)]);
 		else
 			idx = find(Uim(:,:,x,y+1) > eps - ll(x,y+1,ieps));

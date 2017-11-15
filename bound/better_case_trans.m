@@ -1,4 +1,4 @@
-function [C,p] = wct(U, Ua, prms, b)
+function [C,C2,p] = wct(U, Ua, prms, b)
 
 if nargin == 2, b = inf; end
 
@@ -78,3 +78,5 @@ else             % uncomment to draw probability map
 end
 end
 end
+
+C2 = mean(p(:));
