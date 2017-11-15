@@ -30,7 +30,7 @@ sz2 = [size(u2,1),size(u2,2)];
 
 % set parameters ---------------------------------------------------------------
 prms.psz   = [5,5];  % patch size
-prms.list  = 2;      % number of nearest neighbors
+prms.list  = 1;      % number of nearest neighbors
 prms.iters = 250;     % patchmatch iterations
 prms.rsz = 20;
 %prms.transition_kernel = 'acceptance';
@@ -44,7 +44,8 @@ prms.nradii = 0; % 1 means uniform search ~ 0 means patchmatch search
 %yrange = [3,22]; % y are cols
 %[xx,yy] = meshgrid(yrange,xrange);
 %points = [yy(:) xx(:)]; clear xx yy
-points = [3,3; 22, 22];
+%points = [3,3; 22, 22];
+points = [22, 22];
 npoints = size(points,1);
 %values = [1, 2, 5, 10, 15];
 values = [.5];
@@ -99,17 +100,17 @@ end
 
 % visualize results comparing bounds -------------------------------------------
 
-% generate theoretical energy decay
-Pt0 = zeros(npoints, prms.iters + 1, nvalues, prms.list);
-Pt1 = zeros(npoints, prms.iters + 1, nvalues, prms.list);
-Pt0(:,1,:) = Pi;
-Pt1(:,1,:) = Pi;
-for i = 2:prms.iters+1,
-	if mod(i,2)
-		Pt0(:,i,:) = C0b.*squeeze(Pt0(:,i-1,:));
-		Pt1(:,i,:) = C1b.*squeeze(Pt1(:,i-1,:));
-	else
-		Pt0(:,i,:) = C0f.*squeeze(Pt0(:,i-1,:));
-		Pt1(:,i,:) = C1f.*squeeze(Pt1(:,i-1,:));
-	end
-end
+%% % generate theoretical energy decay
+%% Pt0 = zeros(npoints, prms.iters + 1, nvalues, prms.list);
+%% Pt1 = zeros(npoints, prms.iters + 1, nvalues, prms.list);
+%% Pt0(:,1,:,:) = repmat(Pi, [1 1 prms.list]);
+%% Pt1(:,1,:,:) = repmat(Pi, [1 1 prms.list]);
+%% for i = 2:prms.iters+1,
+%% 	if mod(i,2)
+%% 		Pt0(:,i,:,:) = repmat(C0b, [1 1 prms.list]).*squeeze(Pt0(:,i-1,:,:));
+%% 		Pt1(:,i,:,:) = repmat(C1b, [1 1 prms.list]).*squeeze(Pt1(:,i-1,:,:));
+%% 	else
+%% 		Pt0(:,i,:,:) = repmat(C0f, [1 1 prms.list]).*squeeze(Pt0(:,i-1,:,:));
+%% 		Pt1(:,i,:,:) = repmat(C1f, [1 1 prms.list]).*squeeze(Pt1(:,i-1,:,:));
+%% 	end
+%% end

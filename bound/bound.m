@@ -19,7 +19,7 @@ A = im2col(a, [psz,psz], 'sliding'); % patches of A
 B = im2col(b, [psz,psz], 'sliding'); % patches of B
 
 % L2 distances between all patches in A and B
-U = sqrt(bsxfun(@plus, sum(B.^2,1), bsxfun(@plus, sum(A.^2,1)', -2*A'*B))/psz/psz);
+U = real(sqrt(bsxfun(@plus, sum(B.^2,1), bsxfun(@plus, sum(A.^2,1)', -2*A'*B))/psz/psz));
 Umin = min(U,[],2);
 U = bsxfun(@minus, U, Umin);
 

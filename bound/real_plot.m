@@ -52,29 +52,24 @@ end
 
 if 1,
 	C0 = zeros(npoints, nvalues);
-	Cold = zeros(npoints, nvalues);
 	C1 = zeros(npoints, nvalues);
-    C1_2 = zeros(npoints, nvalues);
-    C2 = zeros(npoints, nvalues);
-    C3 = zeros(npoints, nvalues);
+	C1_2 = zeros(npoints, nvalues);
+	C2 = zeros(npoints, nvalues);
+	C3 = zeros(npoints, nvalues);
 	Pi = zeros(npoints, nvalues);
 	for i = 1:npoints,
 		prms.rsz = 10;
-		[C0x, ll] = bound(u1, u2, points(i,:), values, prms);
-		C0(i,:) = prod(C0x);
- %       C2x = expected_bound(u1, u2, points(i,:), values, prms);
+%		C2x = expected_bound(u1, u2, points(i,:), values, prms);
 %		C2(i,:) = prod(C2x);
-		[C1x, C1_2x, Coldx, Pix, leps] = tighter_bound(u1, u2, points(i,:), values, prms);
-		Cold(i,:) = prod(prod(Coldx));
+		[C1x, C1_2x, C0x, Pix, leps] = tighter_bound(u1, u2, points(i,:), values, prms);
+		C0(i,:) = prod(prod(C0x));
 		C1(i,:) = prod(prod(C1x));
-%        C1_2(i,:) = prod(prod(C1_2x));
-        %C3x = tight_bound(u1, u2, points(i,:), values, prms);
-		%C3(i,:) = prod(prod(C3x));
+%		C1_2(i,:) = prod(prod(C1_2x));
+%		C3x = tight_bound(u1, u2, points(i,:), values, prms);
+%		C3(i,:) = prod(prod(C3x));
 		Pi(i,:) = Pix';
 	end
 end
-
-keyboard
 
 % compute empirical convergence bound at selected points -----------------------
 if 0,
