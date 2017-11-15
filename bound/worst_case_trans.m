@@ -111,6 +111,9 @@ if inmin < n, for i0 = 1:n,
 end, end %0
 
 %C = max(p(:)/length(radii));
-C = max(p(:));
+if prms.list > 1, C = max(p(:));
+else              C = max(p(find(U)));
+end
+	
 
 
