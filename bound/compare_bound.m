@@ -2,9 +2,16 @@
 u1 = mean(double(imread('~/Work/denoising/data/derf/bus/001.png')),3);
 u2 = mean(double(imread('~/Work/denoising/data/derf/bus/010.png')),3);
 
+%u12 = randn(24,24);
+%u1 = 128 + 20*u12;%[randn(10, 50); randn(20,10) u12 randn(20,20); randn(20, 50)];
+%u2 = 128 + 20*[randn(48,100); randn(24,48) u12 randn(24,28); randn(28,100)];
+
+% experiment designed to break pm
 u12 = randn(24,24);
 u1 = 128 + 20*u12;%[randn(10, 50); randn(20,10) u12 randn(20,20); randn(20, 50)];
-u2 = 128 + 20*[randn(48,100); randn(24,48) u12 randn(24,28); randn(28,100)];
+u2 = 128 + 20*[randn(76,100); randn(24,76) u12 ];
+u2(1:5,1:5) = u1(20:24,20:24);
+
 %u12 = randn(5,5);
 %u1 = 128 + 20*[randn(10, 50); randn( 5,10) u12 randn( 5,35); randn(35, 50)];
 %u2 = 128 + 20*[randn(50,100); randn( 5,50) u12 randn( 5,45); randn(45,100)];
@@ -23,12 +30,12 @@ sz2 = [size(u2,1),size(u2,2)];
 
 % set parameters ---------------------------------------------------------------
 prms.psz   = [5,5];  % patch size
-prms.list  = 1;      % number of nearest neighbors
+prms.list  = 2;      % number of nearest neighbors
 prms.iters = 250;     % patchmatch iterations
 prms.rsz = 20;
 %prms.transition_kernel = 'acceptance';
 prms.transition_kernel = 'regular';
-prms.nradii = 1; % 1 means uniform search ~ 0 means patchmatch search
+prms.nradii = 0; % 1 means uniform search ~ 0 means patchmatch search
 
 % select a set of points in image 1, and some energy levels --------------------
 %xrange = [5,12,14,13]; % x are rows
@@ -38,7 +45,7 @@ prms.nradii = 1; % 1 means uniform search ~ 0 means patchmatch search
 %[xx,yy] = meshgrid(yrange,xrange);
 %points = [yy(:) xx(:)]; clear xx yy
 points = [3,3; 22, 22];
-npoints = length(points);
+npoints = size(points,1);
 %values = [1, 2, 5, 10, 15];
 values = [.5];
 nvalues = length(values);

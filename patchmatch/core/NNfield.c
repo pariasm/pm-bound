@@ -290,7 +290,8 @@ int forward_pass(iImage msk1, iImage msk2,
 #ifndef BOUND_VERSION
 	int nradii = (int)( log( 1.0 / ((double)w) ) / log(alpha) ); 
 #else
-	int nradii = 1;
+	int nradii = (int)( log( 1.0 / ((double)w) ) / log(alpha) ); 
+//	int nradii = 1;
 #endif
 	int *radii = calloc(nradii,sizeof(int));
 	double radii_tmp = w;
@@ -331,7 +332,11 @@ int forward_pass(iImage msk1, iImage msk2,
 		}
 
 		/* random search */
+#ifndef BOUND_VERSION
 		for (int ll = 0; ll < current_list->quant; ll++)
+#else
+		int ll = 0;
+#endif
 		{
 			idxelement i2;
 			i2.x = px + current_list->l[ll].ox;

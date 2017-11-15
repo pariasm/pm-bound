@@ -58,7 +58,7 @@ for i = prev_trials + [1:trials],
 	prms.mxit = +1;
 	for j = 1:iters
 	 	% negative iters means to start with backward prop
-%		prms.mxit = -1*prms.mxit;
+		prms.mxit = -1*prms.mxit;
 		[nnfy,nnfx,sc] = nnfield(u1,msk1,u2,msk2,window,prms,nnfy,nnfx);
 		sc = sqrt(sc) - sqrt(sc0(:,:,1:prms.list));
 
@@ -71,7 +71,7 @@ for i = prev_trials + [1:trials],
 	% update probabilities and variances
 	for v = 1:length(values), 
 		Pold = P(:,:,v,:);
-		Pi = squeeze(scs > values(v));
+		Pi = reshape(squeeze(scs > values(v)), size(P(:,:,v,:)));
 		P(:,:,v,:) = 1/i*((i-1)*P(:,:,v,:) + Pi);
 		V(:,:,v,:) = 1/i*((i-1)*V(:,:,v,:) + (Pi - Pold).*(Pi - P(:,:,v,:)));
 	end

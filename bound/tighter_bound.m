@@ -77,15 +77,33 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 	for x = size(Uim,3)-1:-1:1,
 	for y = size(Uim,4)-1:-1:1,
 		if shift,
-			MM(:,:,x,y) = [(Uim(2:end,:,x+1,y) >= ll(x+1,y,ieps)); ones(1,size(Uim,2))] ...
-			           .* [(Uim(:,2:end,x,y+1) >= ll(x,y+1,ieps)), ones(size(Uim,1),1)];
+			MMx = [(Uim(2:end,:,x+1,y) >= ll(x+1,y,ieps)); ones(1,size(Uim,2))];
+			MMy = [(Uim(:,2:end,x,y+1) >= ll(x,y+1,ieps)), ones(size(Uim,1),1)];
 		else
-			MM(:,:,x,y) = (Uim(:,:,x+1,y) >= ll(x+1,y,ieps)) .* (Uim(:,:,x,y+1) > ll(x,y+1,ieps));
+			MMx = (Uim(:,:,x+1,y) >= ll(x+1,y,ieps))
+			MMy = (Uim(:,:,x,y+1) >= ll(x,y+1,ieps));
 		end
+		MM(:,:,x,y) = MMx .* MMy; % intersection
 		Uxy = Uim(:,:,x,y);
-		idx = find(MM(:,:,x,y));
-		if ~isempty(idx), ll(x,y,ieps) = min(Uxy(idx));
-		else              ll(x,y,ieps) = inf;
+
+		if prms.list == 1,
+			idx = find(MM(:,:,x,y));
+			if ~isempty(idx), ll(x,y,ieps) = min(Uxy(idx));
+			else              ll(x,y,ieps) = inf;
+			end
+		else
+			idx = find(MMx);
+			if ~isempty(idx), llx = min(Uxy(idx));
+			else              llx = inf;
+			end
+
+			idx = find(MMy);
+			if ~isempty(idx), lly = min(Uxy(idx));
+			else              lly = inf;
+			end
+
+			% max of the mins
+			ll(x,y,ieps) = max(llx,lly);
 		end
 	end
 	end
