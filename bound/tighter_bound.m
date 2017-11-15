@@ -1,4 +1,4 @@
-function [C,C2,Pi,ll,Uim] = compute_patchmatch_bound(a0, b, p, epsilons, prms, mepsilons)
+function [C,C2,Cold,Pi,ll,Uim] = compute_patchmatch_bound(a0, b, p, epsilons, prms, mepsilons)
 
 if nargin == 5,
 	mepsilons = inf*ones(size(epsilons));
@@ -33,8 +33,63 @@ U = bsxfun(@minus, U, Umin);
 Uim = permute(reshape(U,[sza,szb]-psz+1),[3,4,1,2]);
 % U = permute(reshape(Uim,[prod(sza-psz+1),prod(szb-psz+1)],[1,2,3,4]); % inverse
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% computed old version of the bound (bound.m)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% compute the energy similarity weights for adjacent pixel in a
+wx = zeros(size(Uim,3), size(Uim,4));
+wy = zeros(size(Uim,3), size(Uim,4));
+for x = 1:size(Uim,3)-1,
+for y = 1:size(Uim,4)-1,
+	wx(x,y) = max(max(abs(Uim(2:end,:,x+1,y) - Uim(1:end-1,:,x,y))));
+	wy(x,y) = max(max(abs(Uim(:,2:end,x,y+1) - Uim(:,1:end-1,x,y))));
+end
+end
+
+y = size(Uim,4);
+for k = 1:size(Uim,3)-1,
+	wx(k,y) = max(max(abs(Uim(2:end,:,k+1,y) - Uim(1:end-1,:,k,y))));
+end
+
+x = size(Uim,3); 
+for k = 1:size(Uim,4)-1,
+	wy(x,k) = max(max(abs(Uim(:,2:end,x,k+1) - Uim(:,1:end-1,x,k))));
+end
+
+% run Dijstra's algorithm to computing geodesics
+% ll contains the geodesic distance from every point in a to the bottom right
+% pixel (because we are interested in the forward prop)
+wx = flipud(fliplr(wx));
+wy = flipud(fliplr(wy));
+
+llold = inf*ones(size(Uim,3), size(Uim,4));
+llold(:,1) = cumsum(wx(:,1));
+llold(1,:) = cumsum(wy(1,:));
+for x = 2:size(Uim,3),
+for y = 2:size(Uim,4),
+	llold(x,y) = min(llold(x-1,y) + wx(x,y), llold(x,y-1) + wy(x,y));
+end
+end
+llold = flipud(fliplr(llold));
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% computed old version of the bound (bound.m)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+
 ll = nan*ones(size(Uim,3), size(Uim,4), length(epsilons));
 C = ones(size(ll));
+Cold = ones(size(ll));
 C2 = ones(size(ll));
 Pi = zeros(length(epsilons),1);
 for ieps = 1:length(epsilons), eps = epsilons(ieps);
@@ -126,6 +181,7 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 				[C(px,py,ieps) C2(px,py,ieps)] = better_case_trans(Uim(:,:,px,py), MM(:,:,px,py), prms, mepsilons(ieps));
 			else
 				C(px,py,ieps) =  worst_case_trans(Uim(:,:,px,py), ll(px,py,ieps), prms);
+				Cold(px,py,ieps) =  worst_case_trans(Uim(:,:,px,py), eps - llold(px,py), prms);
 			end
 
 			imagesc(C(:,:,ieps)); drawnow
