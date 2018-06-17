@@ -1,4 +1,4 @@
-function [C,C2,Cold,Pi,ll,Uim] = compute_patchmatch_bound(a0, b, p, epsilons, prms, mepsilons)
+function [C,C2,Cold,Pi,ll,llold,Uim] = compute_patchmatch_bound(a0, b, p, epsilons, prms, mepsilons)
 
 if nargin == 5,
 	mepsilons = inf*ones(size(epsilons));
@@ -178,7 +178,8 @@ for ieps = 1:length(epsilons), eps = epsilons(ieps);
 			if px < 1 || py < 1, continue, end
 
 			if strcmp(prms.transition_kernel, 'acceptance'),
-				[C(px,py,ieps) C2(px,py,ieps)] = better_case_trans(Uim(:,:,px,py), MM(:,:,px,py), prms, mepsilons(ieps));
+				[C(px,py,ieps), C2(px,py,ieps)] = better_case_trans(Uim(:,:,px,py), MM(:,:,px,py), prms, mepsilons(ieps));
+                Cold(px,py,ieps) =  worst_case_trans(Uim(:,:,px,py), eps - llold(px,py), prms);
 			else
 				C(px,py,ieps) =  worst_case_trans(Uim(:,:,px,py), ll(px,py,ieps), prms);
 				Cold(px,py,ieps) =  worst_case_trans(Uim(:,:,px,py), eps - llold(px,py), prms);
